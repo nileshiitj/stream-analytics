@@ -45,6 +45,7 @@ class LBNLAnalyzer:
         try:
             cmd = ['rwfilter', '--version']
             result = subprocess.run(cmd, capture_output=True, text=True)
+            print(f"\nTesting rwfilter: {result.stdout.strip()}")
             return True
         except Exception as e:
             print(f"Error testing rwfilter: {e}")
@@ -52,9 +53,20 @@ class LBNLAnalyzer:
 
     def fetch_tcp_data(self):
         print("\nFetching TCP traffic data")
+        verify_cmd = [
+            'rwfilter',
+            f'--start-date={self.start_date}',
+            f'--end-date={self.end_date}',
+            '--sensor=S0',
+            '--type=all',
+            '--proto=6',
+            '--print-statistics'
+        ]
         
         try:
             print("Verifying data access...")
+            verify_result = subprocess.run(' '.join(verify_cmd), shell=True, capture_output=True, text=True)
+            print(verify_result.stdout)
             
             cmd = [
                 'rwfilter',
@@ -97,6 +109,14 @@ class LBNLAnalyzer:
                 ]
                 print("Executing alternative command:", ' '.join(cmd))
                 result = subprocess.run(' '.join(cmd), shell=True, capture_output=True, text=True)
+            
+            if result.stdout:
+                print("\nSample of raw output:")
+                print(result.stdout[:500])
+                return self.parse_rwcount_output(result.stdout)
+            else:
+                print("No data received from rwfilter")
+                return None
                 
         except Exception as e:
             print(f"Error executing rwfilter command: {e}")
@@ -145,8 +165,8 @@ class LBNLAnalyzer:
         ]
         
         df['traffic_class'] = pd.cut(df['packets'], 
-            bins=[r[0] for r in ranges] + [float('inf')],
-            labels=['Low', 'Medium', 'High', 'Very High'])
+                                   bins=[r[0] for r in ranges] + [float('inf')],
+                                   labels=['Low', 'Medium', 'High', 'Very High'])
         
         df['vfdt_class'] = pd.qcut(df['packets'], q=4, labels=['Q1', 'Q2', 'Q3', 'Q4'])
         
@@ -230,8 +250,14 @@ class LBNLAnalyzer:
     def analyze_tcp_traffic(self):
         print("\nStarting LBNL TCP traffic analysis...")
         
+        if not self.test_silk_command():
+            print("Error: SiLK tools not properly installed or configured")
+            return None
         
         df = self.fetch_tcp_data()
+        if df is None or df.empty:
+            print("Error: No data available for analysis")
+            return None
         
         try:
             stats = self.calculate_statistics(df)
