@@ -1,291 +1,220 @@
-
+import os
 import subprocess
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime
-import os
 import traceback
-import sys
-class LBNLAnalyzer:
-    def __init__(self):
 
+class TrafficAnalyzer:
+    def __init__(self):
+        """
+        Initialize TrafficAnalyzer with default configuration and setup.
+        """
         self.config = {
-            'anomaly_threshold': 1000,
+            'threshold': 1000,  # Anomaly threshold for packet count
             'start_date': '2004/10/04:20',
             'end_date': '2005/01/08:05',
-            'bin_size': 60  # seconds
+            'bin_interval': 60  # Interval in seconds
         }
-        
 
-        self.anomaly_threshold = self.config['anomaly_threshold']
+        self.output_dir = "output"
+        os.makedirs(self.output_dir, exist_ok=True)
+
+        # Load configuration settings
+        self.threshold = self.config['threshold']
         self.start_date = self.config['start_date']
         self.end_date = self.config['end_date']
-        self.bin_size = self.config['bin_size']
-        
-        self.output_dir = 'output'
-        os.makedirs(self.output_dir, exist_ok=True)
-        self._verify_environment()
-    
-    def _verify_environment(self):
-        """Verify SiLK environment setup"""
-        print("\nVerifying environment setup:")
-        silk_data_dir = os.environ.get('SILK_DATA_ROOTDIR')
-        silk_config = os.environ.get('SILK_CONFIG_FILE')
-        print(f"SILK_DATA_ROOTDIR = {silk_data_dir}")
-        print(f"SILK_CONFIG_FILE = {silk_config}")
-        if not silk_data_dir or not silk_config:
-            print("Warning: SiLK environment variables not fully set")
-        if silk_data_dir and not os.path.exists(silk_data_dir):
-            print(f"Warning: SILK_DATA_ROOTDIR {silk_data_dir} does not exist")
-        if silk_config and not os.path.exists(silk_config):
-            print(f"Warning: SILK_CONFIG_FILE {silk_config} does not exist")
+        self.bin_interval = self.config['bin_interval']
 
-    def test_silk_command(self):
+        self._verify_environment()
+
+    def _verify_environment(self):
+        """
+        Check for necessary SiLK environment variables and files.
+        """
+        print("\n[INFO] Validating SiLK environment setup...")
+        silk_dir = os.getenv('SILK_DATA_ROOTDIR')
+        silk_config = os.getenv('SILK_CONFIG_FILE')
+
+        print(f"  - SILK_DATA_ROOTDIR: {silk_dir or 'Not Set'}")
+        print(f"  - SILK_CONFIG_FILE: {silk_config or 'Not Set'}")
+
+        if not silk_dir or not silk_config:
+            print("[WARNING] Missing required SiLK environment variables.")
+        if silk_dir and not os.path.exists(silk_dir):
+            print(f"[WARNING] The directory '{silk_dir}' does not exist.")
+        if silk_config and not os.path.exists(silk_config):
+            print(f"[WARNING] The file '{silk_config}' does not exist.")
+
+    def validate_silk_tools(self):
+        """
+        Confirm that SiLK tools are installed and operational.
+        """
+        print("\n[INFO] Verifying SiLK tools...")
         try:
             cmd = ['rwfilter', '--version']
             result = subprocess.run(cmd, capture_output=True, text=True)
-            print(f"\nTesting rwfilter: {result.stdout.strip()}")
+            print(f"[SUCCESS] SiLK Tools Verified: {result.stdout.strip()}")
             return True
         except Exception as e:
-            print(f"Error testing rwfilter: {e}")
+            print(f"[ERROR] Unable to verify SiLK tools: {e}")
             return False
 
-    def fetch_tcp_data(self):
-        print("\nFetching TCP traffic data")
-        verify_cmd = [
+    def fetch_data(self):
+        """
+        Retrieve TCP traffic data using SiLK rwfilter and rwstats commands.
+        """
+        print("\n[INFO] Fetching traffic data...")
+        rwfilter_cmd = [
             'rwfilter',
             f'--start-date={self.start_date}',
             f'--end-date={self.end_date}',
             '--sensor=S0',
+            '--proto=6',  # TCP protocol
             '--type=all',
-            '--proto=6',
-            '--print-statistics'
+            '--pass=stdout'
         ]
-        
+
+        rwstats_cmd = [
+            'rwstats',
+            '--fields=stime',
+            '--values=packets,bytes',
+            '--bin-size=60',
+            '--delimited=|',
+            '--count=0'
+        ]
+
         try:
-            print("Verifying data access...")
-            verify_result = subprocess.run(' '.join(verify_cmd), shell=True, capture_output=True, text=True)
-            print(verify_result.stdout)
-            
-            cmd = [
-                'rwfilter',
-                f'--start-date={self.start_date}',
-                f'--end-date={self.end_date}',
-                '--sensor=S0',
-                '--type=all',
-                '--proto=6',
-                '--pass=stdout',
-                '|',
-                'rwstats',
-                '--fields=stime',
-                '--values=packets,bytes',
-                '--count=0',
-                '--bin-size=60',
-                '--delimited=|'
-            ]
-            
-            print("Executing command:", ' '.join(cmd))
-            result = subprocess.run(' '.join(cmd), shell=True, capture_output=True, text=True)
-            
+            # Combine commands with piping
+            cmd = ' | '.join([' '.join(rwfilter_cmd), ' '.join(rwstats_cmd)])
+            print(f"  - Executing command: {cmd}")
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
             if result.stderr:
-                print("Command produced errors:", result.stderr)
-            
-            if not result.stdout:
-                print("No output produced")
-                cmd = [
-                    'rwfilter',
-                    f'--start-date={self.start_date}',
-                    f'--end-date={self.end_date}',
-                    '--sensor=S0',
-                    '--type=all',
-                    '--proto=6',
-                    '--pass=stdout',
-                    '|',
-                    'rwuniq',
-                    '--fields=sTime',
-                    '--values=packets,bytes',
-                    '--bin-time=60'
-                ]
-                print("Executing alternative command:", ' '.join(cmd))
-                result = subprocess.run(' '.join(cmd), shell=True, capture_output=True, text=True)
-            
+                print(f"[ERROR] Command execution error: {result.stderr}")
+
             if result.stdout:
-                print("\nSample of raw output:")
+                print("[INFO] Successfully fetched data. Previewing first 500 characters:")
                 print(result.stdout[:500])
-                return self.parse_rwcount_output(result.stdout)
+                return self._parse_output(result.stdout)
             else:
-                print("No data received from rwfilter")
+                print("[ERROR] No data retrieved. Check the command or data source.")
                 return None
-                
         except Exception as e:
-            print(f"Error executing rwfilter command: {e}")
+            print(f"[ERROR] Failed to fetch data: {e}")
             traceback.print_exc()
             return None
 
-    def parse_rwcount_output(self, output):
-        """Parse output into DataFrame"""
-        print("\nParsing output...")
+    def _parse_output(self, output):
+        """
+        Convert raw rwstats output to a pandas DataFrame.
+        """
+        print("\n[INFO] Parsing traffic data...")
         records = []
-        for line in output.split('\n'):
+
+        for line in output.splitlines():
             if line and not line.startswith('#'):
-                try:
-                    parts = line.strip().split('|')
-                    if len(parts) >= 2:
+                parts = line.split('|')
+                if len(parts) >= 3:
+                    try:
                         record = {
                             'timestamp': pd.to_datetime(parts[0].strip()),
-                            'packets': int(float(parts[1].strip()) if len(parts) > 1 else 0)
+                            'packets': int(float(parts[1].strip())),
+                            'bytes': int(float(parts[2].strip()))
                         }
-                        if len(parts) > 2:
-                            record['bytes'] = int(float(parts[2].strip()))
                         records.append(record)
-                except Exception as e:
-                    print(f"Error parsing line '{line}': {e}")
-                    continue
-        
+                    except ValueError as ve:
+                        print(f"[WARNING] Skipping line due to parsing error: {line} ({ve})")
+
         if not records:
-            print("No records were successfully parsed")
+            print("[ERROR] No records parsed from the data.")
             return None
-        
-        df = pd.DataFrame(records)
-        df = df.sort_values('timestamp')
-        print(f"\nSuccessfully parsed {len(df)} records")
-        print("\nSample of parsed data:")
+
+        df = pd.DataFrame(records).sort_values(by='timestamp')
+        print("[SUCCESS] Data parsed successfully. Sample:")
         print(df.head())
         return df
 
-    def classify_traffic(self, df):
-        print("\nClassifying traffic...")
-        
-        ranges = [
-            (0, 600),       
-            (601, 6000),    
-            (6001, 60000),  
-            (60001, float('inf'))  
-        ]
-        
-        df['traffic_class'] = pd.cut(df['packets'], 
-                                   bins=[r[0] for r in ranges] + [float('inf')],
-                                   labels=['Low', 'Medium', 'High', 'Very High'])
-        
-        df['vfdt_class'] = pd.qcut(df['packets'], q=4, labels=['Q1', 'Q2', 'Q3', 'Q4'])
-        
-        print("\nTraffic classification summary:")
-        print(df['traffic_class'].value_counts())
-        
-        return df
+    def analyze_data(self, df):
+        """
+        Classify traffic and detect anomalies based on packet counts.
+        """
+        print("\n[INFO] Analyzing traffic data...")
 
-    def detect_anomalies(self, df):
-        print("\nDetecting anomalies")
-        minute_threshold = self.anomaly_threshold * 60
-        anomalies = df[df['packets'] > minute_threshold].copy()
-        print(f"Found {len(anomalies)} anomalies")
-        return anomalies
-    def calculate_statistics(self, df):
-        print("\nCalculating statistics")
-        stats = {
-            'total_packets': df['packets'].sum(),
-            'total_bytes': df['bytes'].sum() if 'bytes' in df.columns else 0,
-            'avg_packets_per_min': df['packets'].mean(),
-            'max_packets_per_min': df['packets'].max(),
-            'min_packets_per_min': df['packets'].min(),
-            'std_dev_packets': df['packets'].std(),
-            'total_minutes': len(df)
-        }
-        return stats
-    def create_visualizations(self, df, anomalies):
-        print("\nCreating visualizations...")
-        plt.figure(figsize=(15, 12))
-        
-        plt.subplot(3, 1, 1)
-        plt.plot(df['timestamp'], df['packets'], label='TCP Traffic')
+        # Traffic classification
+        df['traffic_category'] = pd.cut(
+            df['packets'],
+            bins=[0, 600, 6000, 60000, float('inf')],
+            labels=['Low', 'Moderate', 'High', 'Very High']
+        )
+
+        # Detect anomalies
+        anomalies = df[df['packets'] > self.threshold]
+        print(f"[INFO] Anomalies Detected: {len(anomalies)}")
+        return df, anomalies
+
+    def visualize_data(self, df, anomalies):
+        """
+        Generate visual representations of traffic data.
+        """
+        print("\n[INFO] Generating visualizations...")
+
+        plt.figure(figsize=(15, 10))
+
+        # Plot traffic data
+        plt.plot(df['timestamp'], df['packets'], label='Traffic Volume')
         if not anomalies.empty:
-            plt.scatter(anomalies['timestamp'], anomalies['packets'],
-                       color='red', label='Anomalies')
-        plt.title('TCP Traffic Analysis (LBNL Dataset)')
+            plt.scatter(anomalies['timestamp'], anomalies['packets'], color='red', label='Anomalies')
+
+        plt.title('Traffic Analysis')
         plt.xlabel('Time')
-        plt.ylabel('Packets/minute')
+        plt.ylabel('Packets')
         plt.legend()
-        
-        plt.subplot(3, 1, 2)
-        df['traffic_class'].value_counts().plot(kind='bar')
-        plt.title('Traffic Distribution by Class')
-        plt.xlabel('Traffic Class')
-        plt.ylabel('Count')
-        
-        plt.subplot(3, 1, 3)
-        df['vfdt_class'].value_counts().plot(kind='bar')
-        plt.title('VFDT Classification Distribution')
-        plt.xlabel('VFDT Class')
-        plt.ylabel('Count')
-        
         plt.tight_layout()
-        output_path = os.path.join(self.output_dir, 'lbnl_analysis.png')
+
+        output_path = os.path.join(self.output_dir, 'traffic_visualization.png')
         plt.savefig(output_path)
         plt.close()
-        print(f"Saved visualization to {output_path}")
+        print(f"[SUCCESS] Visualization saved to {output_path}")
 
-    def save_results(self, df, stats, anomalies):
-        print("\nSaving results...")
-        output_path = 'outputfile.txt'
-        with open(output_path, 'w') as f:
-            f.write("=== LBNL TCP Traffic Analysis Results ===\n\n")
-            f.write("Overall Statistics:\n")
-            for key, value in stats.items():
-                f.write(f"{key}: {value:,.2f}\n")
-            
-            f.write("\nTraffic Classification Summary:\n")
-            f.write(df['traffic_class'].value_counts().to_string())
-            
-            f.write("\n\nVFDT Classification Summary:\n")
-            f.write(df['vfdt_class'].value_counts().to_string())
-            
-            f.write(f"\n\nAnomalies Detected: {len(anomalies)}\n")
+    def save_results(self, df, anomalies):
+        """
+        Save the analyzed results to a file.
+        """
+        print("\n[INFO] Saving analysis results...")
+        output_path = os.path.join(self.output_dir, 'analysis_results.txt')
+        with open(output_path, 'w') as file:
+            file.write("Traffic Analysis Results\n")
+            file.write("=========================\n")
+            file.write("\nSummary:\n")
+            file.write(df.describe().to_string())
+            file.write("\n\nAnomalies:\n")
             if not anomalies.empty:
-                f.write("\nTop 5 Anomalous Periods:\n")
-                f.write(anomalies.nlargest(5, 'packets').to_string())
-        
-        print(f"Saved results to {output_path}")
+                file.write(anomalies.to_string())
+            else:
+                file.write("No anomalies detected.")
 
-    def analyze_tcp_traffic(self):
-        print("\nStarting LBNL TCP traffic analysis...")
-        
-        if not self.test_silk_command():
-            print("Error: SiLK tools not properly installed or configured")
-            return None
-        
-        df = self.fetch_tcp_data()
-        if df is None or df.empty:
-            print("Error: No data available for analysis")
-            return None
-        
-        try:
-            stats = self.calculate_statistics(df)
-            
-            df = self.classify_traffic(df)
-            
-            anomalies = self.detect_anomalies(df)
-            
-            self.create_visualizations(df, anomalies)
-            
-            self.save_results(df, stats, anomalies)
-            
-            return stats
-            
-        except Exception as e:
-            print(f"Error during analysis: {e}")
-            traceback.print_exc()
-            return None
+        print(f"[SUCCESS] Results saved to {output_path}")
+
+    def run_analysis(self):
+        """
+        Main function to run the complete analysis.
+        """
+        print("\n=== Starting Traffic Analysis ===")
+        if not self.validate_silk_tools():
+            print("[ERROR] SiLK tools not configured properly. Exiting.")
+            return
+
+        df = self.fetch_data()
+        if df is None:
+            print("[ERROR] Failed to fetch traffic data. Exiting.")
+            return
+
+        df, anomalies = self.analyze_data(df)
+        self.visualize_data(df, anomalies)
+        self.save_results(df, anomalies)
+        print("\n=== Traffic Analysis Complete ===")
 
 if __name__ == "__main__":
-    print("=== LBNL TCP Traffic Analyzer ===")
-    analyzer = LBNLAnalyzer()
-    results = analyzer.analyze_tcp_traffic()
-    
-    if results:
-        print("\nAnalysis complete! Check outputfile.txt for detailed results.")
-        print("\nKey findings:")
-        for key, value in results.items():
-            print(f"{key}: {value:,.2f}")
-    else:
-        print("\nAnalysis failed. Check the error messages above for details.")
+    analyzer = TrafficAnalyzer()
+    analyzer.run_analysis()
