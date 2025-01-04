@@ -1,0 +1,220 @@
+
+The included sample data is in SiLK format; SiLK-v0.10.0 or greater is
+required to read it.
+
+This sample data is derived from anonymized enterprise header
+traces obtained from Lawrence Berkeley National Laboratory and
+ICSI, and is used here with their permission. This data covers
+selected hours on selected dates in late 2004 and early 2005. For
+more information on this dataset, see
+http://www.icir.org/enterprise-tracing/Overview.html
+
+The SiLK-LBNL-05-scanners.tar.gz file includes only the SCANNING
+traffic from the LBNL/ICSI data.  The non-scanning traffic can be
+downloaded from
+http://tools.netsa.cert.org/silk/silk_referencedata.html
+
+The non-scanning and scanning traffic can be expanded on top of each
+other.  The traffic sets use different sensor names which will not
+collide.
+
+The data assumes you have configured SiLK with sensor named S1.  For
+instructions on configuring SiLK, see the SiLK Installation Handbook,
+http://tools.netsa.cert.org/silk/silk_docs.html
+
+This directory, SiLK-LBNL-05, can be used as the top-level data
+directory for rwfilter by setting the environment variable
+SILK_DATA_ROOTDIR to its location.  The non-scanning traffic appears
+as sensor S0, and the scanning traffic as sensor S1.  This allows the
+two sets of data to be analyzed together (though note that the two
+sets of data are anonymized differently) or separately (via the
+"--sensor" switch on rwfilter).
+
+The inside of the network is assumed to contain the following CIDR
+blocks:
+
+  128.3.0.0/16
+  128.55.0.0/16
+  131.243.0.0/16
+  198.125.133.0/24
+  198.128.24.0/22
+  198.129.88.0/22
+
+The list of files included with this distribution are:
+
+README-S1.txt
+silk.conf
+in/2004/10/04/in-S1_20041004.20
+in/2004/10/04/in-S1_20041004.21
+in/2004/10/04/in-S1_20041004.22
+in/2004/12/15/in-S1_20041215.09
+in/2004/12/15/in-S1_20041215.10
+in/2004/12/15/in-S1_20041215.11
+in/2004/12/15/in-S1_20041215.12
+in/2004/12/15/in-S1_20041215.13
+in/2004/12/15/in-S1_20041215.15
+in/2004/12/15/in-S1_20041215.16
+in/2004/12/15/in-S1_20041215.17
+in/2004/12/15/in-S1_20041215.21
+in/2004/12/15/in-S1_20041215.23
+in/2004/12/16/in-S1_20041216.00
+in/2004/12/16/in-S1_20041216.01
+in/2004/12/16/in-S1_20041216.04
+in/2004/12/16/in-S1_20041216.16
+in/2004/12/16/in-S1_20041216.17
+in/2004/12/16/in-S1_20041216.18
+in/2004/12/16/in-S1_20041216.19
+in/2004/12/16/in-S1_20041216.20
+in/2004/12/16/in-S1_20041216.22
+in/2004/12/16/in-S1_20041216.23
+in/2004/12/17/in-S1_20041217.00
+in/2004/12/17/in-S1_20041217.02
+in/2004/12/17/in-S1_20041217.03
+in/2005/01/06/in-S1_20050106.19
+in/2005/01/06/in-S1_20050106.20
+in/2005/01/06/in-S1_20050106.21
+in/2005/01/06/in-S1_20050106.22
+in/2005/01/06/in-S1_20050106.23
+in/2005/01/07/in-S1_20050107.01
+in/2005/01/07/in-S1_20050107.02
+in/2005/01/07/in-S1_20050107.04
+in/2005/01/07/in-S1_20050107.05
+in/2005/01/07/in-S1_20050107.11
+in/2005/01/07/in-S1_20050107.12
+in/2005/01/07/in-S1_20050107.13
+in/2005/01/07/in-S1_20050107.14
+in/2005/01/07/in-S1_20050107.16
+in/2005/01/07/in-S1_20050107.17
+in/2005/01/07/in-S1_20050107.18
+in/2005/01/07/in-S1_20050107.19
+in/2005/01/07/in-S1_20050107.20
+in/2005/01/07/in-S1_20050107.21
+in/2005/01/07/in-S1_20050107.22
+in/2005/01/08/in-S1_20050108.00
+in/2005/01/08/in-S1_20050108.01
+in/2005/01/08/in-S1_20050108.04
+in/2005/01/08/in-S1_20050108.05
+inweb/2004/12/17/iw-S1_20041217.01
+inweb/2005/01/06/iw-S1_20050106.21
+inweb/2005/01/06/iw-S1_20050106.22
+inweb/2005/01/07/iw-S1_20050107.13
+inweb/2005/01/07/iw-S1_20050107.18
+inweb/2005/01/07/iw-S1_20050107.19
+inweb/2005/01/07/iw-S1_20050107.20
+inweb/2005/01/07/iw-S1_20050107.21
+inweb/2005/01/08/iw-S1_20050108.01
+out/2004/10/04/out-S1_20041004.20
+out/2004/10/04/out-S1_20041004.21
+out/2004/10/04/out-S1_20041004.22
+out/2004/12/15/out-S1_20041215.08
+out/2004/12/15/out-S1_20041215.09
+out/2004/12/15/out-S1_20041215.10
+out/2004/12/15/out-S1_20041215.11
+out/2004/12/15/out-S1_20041215.12
+out/2004/12/15/out-S1_20041215.13
+out/2004/12/15/out-S1_20041215.14
+out/2004/12/15/out-S1_20041215.15
+out/2004/12/15/out-S1_20041215.16
+out/2004/12/15/out-S1_20041215.17
+out/2004/12/15/out-S1_20041215.18
+out/2004/12/15/out-S1_20041215.19
+out/2004/12/15/out-S1_20041215.20
+out/2004/12/15/out-S1_20041215.21
+out/2004/12/15/out-S1_20041215.22
+out/2004/12/15/out-S1_20041215.23
+out/2004/12/16/out-S1_20041216.00
+out/2004/12/16/out-S1_20041216.01
+out/2004/12/16/out-S1_20041216.02
+out/2004/12/16/out-S1_20041216.03
+out/2004/12/16/out-S1_20041216.04
+out/2004/12/16/out-S1_20041216.05
+out/2004/12/16/out-S1_20041216.06
+out/2004/12/16/out-S1_20041216.16
+out/2004/12/16/out-S1_20041216.17
+out/2004/12/16/out-S1_20041216.18
+out/2004/12/16/out-S1_20041216.19
+out/2004/12/16/out-S1_20041216.20
+out/2004/12/16/out-S1_20041216.21
+out/2004/12/16/out-S1_20041216.22
+out/2004/12/16/out-S1_20041216.23
+out/2004/12/17/out-S1_20041217.00
+out/2004/12/17/out-S1_20041217.01
+out/2004/12/17/out-S1_20041217.02
+out/2004/12/17/out-S1_20041217.03
+out/2005/01/06/out-S1_20050106.19
+out/2005/01/06/out-S1_20050106.20
+out/2005/01/06/out-S1_20050106.21
+out/2005/01/06/out-S1_20050106.22
+out/2005/01/06/out-S1_20050106.23
+out/2005/01/07/out-S1_20050107.00
+out/2005/01/07/out-S1_20050107.01
+out/2005/01/07/out-S1_20050107.02
+out/2005/01/07/out-S1_20050107.03
+out/2005/01/07/out-S1_20050107.04
+out/2005/01/07/out-S1_20050107.05
+out/2005/01/07/out-S1_20050107.06
+out/2005/01/07/out-S1_20050107.10
+out/2005/01/07/out-S1_20050107.11
+out/2005/01/07/out-S1_20050107.12
+out/2005/01/07/out-S1_20050107.13
+out/2005/01/07/out-S1_20050107.14
+out/2005/01/07/out-S1_20050107.15
+out/2005/01/07/out-S1_20050107.16
+out/2005/01/07/out-S1_20050107.17
+out/2005/01/07/out-S1_20050107.18
+out/2005/01/07/out-S1_20050107.19
+out/2005/01/07/out-S1_20050107.20
+out/2005/01/07/out-S1_20050107.21
+out/2005/01/07/out-S1_20050107.22
+out/2005/01/07/out-S1_20050107.23
+out/2005/01/08/out-S1_20050108.00
+out/2005/01/08/out-S1_20050108.01
+out/2005/01/08/out-S1_20050108.02
+out/2005/01/08/out-S1_20050108.03
+out/2005/01/08/out-S1_20050108.04
+out/2005/01/08/out-S1_20050108.05
+outweb/2004/10/04/ow-S1_20041004.21
+outweb/2004/10/04/ow-S1_20041004.22
+outweb/2004/12/15/ow-S1_20041215.17
+outweb/2004/12/15/ow-S1_20041215.19
+outweb/2004/12/15/ow-S1_20041215.21
+outweb/2004/12/15/ow-S1_20041215.22
+outweb/2004/12/15/ow-S1_20041215.23
+outweb/2004/12/16/ow-S1_20041216.03
+outweb/2004/12/16/ow-S1_20041216.04
+outweb/2004/12/16/ow-S1_20041216.17
+outweb/2004/12/16/ow-S1_20041216.19
+outweb/2004/12/16/ow-S1_20041216.22
+outweb/2004/12/16/ow-S1_20041216.23
+outweb/2004/12/17/ow-S1_20041217.00
+outweb/2004/12/17/ow-S1_20041217.01
+outweb/2004/12/17/ow-S1_20041217.02
+outweb/2005/01/06/ow-S1_20050106.19
+outweb/2005/01/06/ow-S1_20050106.20
+outweb/2005/01/06/ow-S1_20050106.21
+outweb/2005/01/06/ow-S1_20050106.22
+outweb/2005/01/06/ow-S1_20050106.23
+outweb/2005/01/07/ow-S1_20050107.00
+outweb/2005/01/07/ow-S1_20050107.01
+outweb/2005/01/07/ow-S1_20050107.02
+outweb/2005/01/07/ow-S1_20050107.03
+outweb/2005/01/07/ow-S1_20050107.05
+outweb/2005/01/07/ow-S1_20050107.06
+outweb/2005/01/07/ow-S1_20050107.11
+outweb/2005/01/07/ow-S1_20050107.12
+outweb/2005/01/07/ow-S1_20050107.13
+outweb/2005/01/07/ow-S1_20050107.14
+outweb/2005/01/07/ow-S1_20050107.15
+outweb/2005/01/07/ow-S1_20050107.16
+outweb/2005/01/07/ow-S1_20050107.17
+outweb/2005/01/07/ow-S1_20050107.18
+outweb/2005/01/07/ow-S1_20050107.19
+outweb/2005/01/07/ow-S1_20050107.20
+outweb/2005/01/07/ow-S1_20050107.21
+outweb/2005/01/07/ow-S1_20050107.22
+outweb/2005/01/07/ow-S1_20050107.23
+outweb/2005/01/08/ow-S1_20050108.00
+outweb/2005/01/08/ow-S1_20050108.01
+outweb/2005/01/08/ow-S1_20050108.02
+outweb/2005/01/08/ow-S1_20050108.04
+outweb/2005/01/08/ow-S1_20050108.05

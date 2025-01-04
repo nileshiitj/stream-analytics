@@ -1,0 +1,7 @@
+parameter,value,description
+anomaly_threshold,1000,Packets per second threshold for anomaly detection
+start_date,2004/10/04:20,Start date for analysis
+end_date,2005/01/08:05,End date for analysis
+bin_size,60,Time bin size in seconds
+vfdt_min_samples,200,Minimum samples for VFDT node split
+traffic_class_ranges,"0,600,6000,60000",Traffic classification thresholds
